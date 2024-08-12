@@ -28,7 +28,11 @@ from .exceptions import (
     FatalWorkerException,
     InvalidStateException,
 )
-from .helpers import StreamRedirector, WrappedStream
+from .helpers import (
+    StreamRedirector,
+    WrappedStream,
+    unwrap_pydantic_serialization_iterators,
+)
 
 _spawn = multiprocessing.get_context("spawn")
 
@@ -357,10 +361,16 @@ class _ChildWorker(_spawn.Process):  # type: ignore
                 if isinstance(result, types.GeneratorType):
                     self._events.send(PredictionOutputType(multi=True))
                     for r in result:
-                        self._events.send(PredictionOutput(payload=make_encodeable(r)))
+                        payload = make_encodeable(
+                            unwrap_pydantic_serialization_iterators(r)
+                        )
+                        self._events.send(PredictionOutput(payload=payload))
                 else:
                     self._events.send(PredictionOutputType(multi=False))
-                    self._events.send(PredictionOutput(payload=make_encodeable(result)))
+                    payload = make_encodeable(
+                        unwrap_pydantic_serialization_iterators(result)
+                    )
+                    self._events.send(PredictionOutput(payload=payload))
         except CancelationException:
             done.canceled = True
         except Exception as e:  # pylint: disable=broad-exception-caught
