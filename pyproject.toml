@@ -25,8 +25,6 @@ dependencies = [
   "attrs>=20.1,<24",
   "fastapi>=0.75.2,<0.111.0",
   "pydantic>=1.9,<3",
-  # we may not need http2
-  "httpx[http2]>=0.21.0,<1",
   "PyYAML",
   "requests>=2,<3",
   "structlog>=20,<25",
